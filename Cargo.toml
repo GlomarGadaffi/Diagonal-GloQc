@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+    "lib",
+    "daemon",
+    "rootshell",
+    "telcom-parser",
+]
+resolver = "2"
