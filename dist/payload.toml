@@ -1,0 +1,8 @@
+name        = "rayhunter_daemon"
+version     = "0.11.2"
+data_dir    = "/data/rayhunter"
+binary_name = "rayhunter-daemon"
+args        = "/data/rayhunter/config.toml"
+log_file    = "/data/rayhunter/rayhunter.log"
+pidfile     = "/tmp/rayhunter.pid"
+ports       = [8080]

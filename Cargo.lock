@@ -786,6 +786,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "diag-core"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1606,6 +1613,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mvp-daemon"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "diag-core",
+ "libc",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "nix"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2045,6 +2064,7 @@ dependencies = [
  "chrono",
  "crc",
  "deku 0.20.3",
+ "diag-core",
  "env_logger 0.11.11",
  "futures",
  "libc",

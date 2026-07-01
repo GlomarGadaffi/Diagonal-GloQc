@@ -4,7 +4,7 @@ port = 8080
 debug_mode = false
 colorblind_mode = false
 # Device selection. Defaults to "orbic".
-#device = "orbic"
+device = "orbic"
 # UI Levels:
 #
 # Orbic and TP-Link with color display:

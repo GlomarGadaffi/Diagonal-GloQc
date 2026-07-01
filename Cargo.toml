@@ -5,5 +5,7 @@ members = [
     "daemon",
     "rootshell",
     "telcom-parser",
+    "diag-core",
+    "mvp-daemon",
 ]
 resolver = "2"

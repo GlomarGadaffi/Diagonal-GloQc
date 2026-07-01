@@ -1,0 +1,12 @@
+[package]
+name = "diag-core"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Independent reimplementation of the Qualcomm DIAG capture protocol core — see spec/diag-protocol.md"
+
+[dependencies]
+# Compression is an implementation choice, not protocol expression (spec
+# §8) — a standard crate here doesn't touch the clean-room boundary the
+# way hand-rolling the protocol layers does.
+flate2 = "1"

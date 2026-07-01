@@ -1,0 +1,20 @@
+[package]
+name = "mvp-daemon"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "MIT-releasable MVP daemon: DIAG capture (via diag-core) + minimal status/control UI"
+
+[[bin]]
+name = "mvp-daemon"
+path = "src/main.rs"
+
+[dependencies]
+diag-core = { path = "../diag-core" }
+axum = { version = "0.8", default-features = false, features = ["tokio", "http1", "json"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "io-util", "time", "sync"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
