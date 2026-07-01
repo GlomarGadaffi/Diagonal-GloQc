@@ -14,8 +14,16 @@ Everything below is what's left.
   classification for RRC is a best-effort default, not verified — see
   ARCHITECTURE.md.
 - **Raw archive export + basic observability.** Download a capture as-is,
-  or converted to pcap; a running log-type distribution count, independent
-  of recording state.
+  or converted to pcap; a running log-type distribution count (with a
+  per-type "is a decoder registered" flag), independent of recording state.
+- **Legacy 2G/3G signalling + UMTS NAS + NR RRC decode.**
+  `diag-core::legacy_signalling` (WCDMA/GSM-RR/GPRS-MAC), `nas::decode_umts`,
+  `rrc::decode_nr` — extends decode breadth beyond the original pcap-export
+  scope, though not yet wired into pcap export itself (that's still
+  deliberately LTE RRC + plain NAS only, matching the pre-clean-room
+  daemon). `ip_traffic` also exists but is explicitly flagged uncertain,
+  not presented with the same confidence as the others — see
+  ARCHITECTURE.md.
 
 ## 1. Internal-plane decoders, by value
 

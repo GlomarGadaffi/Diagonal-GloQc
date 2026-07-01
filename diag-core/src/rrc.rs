@@ -158,6 +158,18 @@ pub fn decode(body: &[u8]) -> Result<Decoded, DecodeError> {
     })
 }
 
+pub const NR_RRC_OTA: u16 = 0xB821;
+
+/// NR RRC OTA has no metadata header at all in this log type — unlike LTE
+/// RRC OTA (above), the entire body is just the raw PDU, no
+/// `ext_header_version`/bearer/cell/EARFCN/SFN fields to parse out first.
+/// Trivial enough that it can't really fail; kept as a function rather
+/// than a bare pass-through at the call site so the "why isn't NR
+/// versioned like LTE" question has an answer written down once, here.
+pub fn decode_nr(body: &[u8]) -> Vec<u8> {
+    body.to_vec()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -264,5 +276,12 @@ mod tests {
         assert_eq!(header.channel_hint(), ChannelHint::UlDcch);
         header.pdu_num = 200;
         assert_eq!(header.channel_hint(), ChannelHint::Unknown);
+    }
+
+    #[test]
+    fn decode_nr_is_a_pure_pass_through() {
+        let pdu = [0x01, 0x02, 0x03];
+        assert_eq!(decode_nr(&pdu), pdu.to_vec());
+        assert_eq!(decode_nr(&[]), Vec::<u8>::new());
     }
 }

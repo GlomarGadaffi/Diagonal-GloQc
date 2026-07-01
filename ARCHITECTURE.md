@@ -55,22 +55,39 @@ written to (no finalizing gzip trailer yet) — returns what decompressed
 cleanly instead of erroring, since that's the normal state of a live
 in-progress recording.
 
-## Decode: `diag-core::log` / `rrc` / `nas` / `dispatch`
+## Decode: `diag-core::log` / `rrc` / `nas` / `legacy_signalling` / `ip_traffic` / `dispatch`
 
 `log::parse` splits a decapsulated message into its LOG header
 (pending_msgs, outer/inner length, log_type, hardware timestamp) and body;
 `log::walk` steps through an archive's concatenated messages (no delimiter
 between them — boundaries only come from each header's own length field).
 
-Per-log-type body decoders: `rrc` (LTE RRC OTA, all four
-firmware-version-gated header layouts) and `nas` (plain ESM/EMM NAS OTA).
-Both just extract metadata and the raw PDU — no ASN.1 needed, since GSMTAP
-(below) carries raw PDU bytes for Wireshark's own dissectors to decode.
-`dispatch` is an open registry for everything else: log types without a
-registered decoder are preserved raw, never dropped — capture coverage and
-decode coverage are independent by design (most log types, including the
-high-frequency internal-plane ones this project exists to surface, don't
-have a decoder yet).
+Per-log-type body decoders, in decreasing order of confidence:
+
+- `rrc` — LTE RRC OTA (`0xB0C0`, all four firmware-version-gated header
+  layouts) and NR RRC OTA (`0xB821`, no header at all — the whole body is
+  the raw PDU).
+- `nas` — plain ESM/EMM LTE NAS OTA (`0xB0E2`/`0xB0E3`/`0xB0EC`/`0xB0ED`)
+  and UMTS NAS OTA (`0x713A`, a different, older shape: explicit
+  uplink-flag + 4-byte length rather than "rest of the body").
+- `legacy_signalling` — WCDMA (`0x412F`), GSM RR (`0x512F`), GPRS MAC
+  (`0x5226`) signalling: one shared shape (channel byte, secondary-id
+  byte, length-prefixed message), differing only in length-field width.
+- `ip_traffic` (`0x11EB`) — **explicitly uncertain**, not presented with
+  the same confidence as the above. The layout used (skip a fixed 8-byte
+  prefix) traces to a single external comment that itself reads "is this
+  right??" rather than a confirmed spec — kept and clearly flagged rather
+  than either fabricating confidence or silently omitting it.
+
+None of these need ASN.1 — they extract metadata and the raw PDU only,
+since GSMTAP (below) carries raw PDU bytes for Wireshark's own dissectors
+to decode. `dispatch` is an open registry for everything else: log types
+without a registered decoder are preserved raw, never dropped — capture
+coverage and decode coverage are independent by design. Real captured
+data from the target device shows this gap concretely: its dominant log
+types by far (one internal-plane code was >97% of messages in one
+capture window) have no decoder yet — none of the above cover it. Highest
+priority for what comes next; see ROADMAP.md.
 
 **Known limitation:** RRC's `pdu_num` → channel-type classification uses one
 reasonable default mapping, not a verified one — the real mapping is

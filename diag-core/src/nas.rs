@@ -1,9 +1,15 @@
-//! Plain (non-secure) LTE NAS OTA log record decode — spec §7. Covers
-//! four log_types: ESM/EMM, each in/out (`0xB0E2`/`0xB0E3`/`0xB0EC`/`0xB0ED`).
+//! Plain (non-secure) NAS OTA log record decode — spec §7.
 //!
-//! Much simpler than RRC OTA (see [`crate::rrc`]): a fixed 4-byte version
-//! header, then the raw NAS PDU runs to the end of the body — no embedded
-//! length field of its own, no per-firmware-version layout differences.
+//! LTE (`decode`): four log_types, ESM/EMM each in/out
+//! (`0xB0E2`/`0xB0E3`/`0xB0EC`/`0xB0ED`). Simple shape: a fixed 4-byte
+//! version header, then the raw NAS PDU runs to the end of the body — no
+//! embedded length field of its own, no per-firmware-version layout
+//! differences (contrast with RRC OTA, see [`crate::rrc`]).
+//!
+//! UMTS (`decode_umts`, log_type `0x713A`): a different, older shape —
+//! a 1-byte uplink flag then an explicit 4-byte length, rather than
+//! "everything else in the body." Kept in this module because it's the
+//! same layer (NAS), not because the wire shape matches LTE's.
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
@@ -47,6 +53,39 @@ pub fn decode(log_type: u16, body: &[u8]) -> Result<Decoded, DecodeError> {
         direction,
         ext_header_version,
         pdu: body[4..].to_vec(),
+    })
+}
+
+pub const UMTS_NAS_OTA: u16 = 0x713A;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UmtsDecoded {
+    pub uplink: bool,
+    pub pdu: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum UmtsDecodeError {
+    TooShort,
+    LengthExceedsAvailableData { declared: usize, available: usize },
+}
+
+pub fn decode_umts(body: &[u8]) -> Result<UmtsDecoded, UmtsDecodeError> {
+    const HEADER_LEN: usize = 5; // 1 uplink flag + 4-byte LE length
+    if body.len() < HEADER_LEN {
+        return Err(UmtsDecodeError::TooShort);
+    }
+    let uplink = body[0] != 0;
+    let length = u32::from_le_bytes(body[1..5].try_into().unwrap()) as usize;
+    if HEADER_LEN + length > body.len() {
+        return Err(UmtsDecodeError::LengthExceedsAvailableData {
+            declared: length,
+            available: body.len() - HEADER_LEN,
+        });
+    }
+    Ok(UmtsDecoded {
+        uplink,
+        pdu: body[HEADER_LEN..HEADER_LEN + length].to_vec(),
     })
 }
 
@@ -108,5 +147,45 @@ mod tests {
             assert!(is_nas_log_type(code));
         }
         assert!(!is_nas_log_type(0xB0C0));
+    }
+
+    fn build_umts(uplink: bool, pdu: &[u8]) -> Vec<u8> {
+        let mut b = vec![uplink as u8];
+        b.extend_from_slice(&(pdu.len() as u32).to_le_bytes());
+        b.extend_from_slice(pdu);
+        b
+    }
+
+    #[test]
+    fn decodes_umts_downlink_and_uplink() {
+        let dl = decode_umts(&build_umts(false, &[0x11, 0x22])).unwrap();
+        assert!(!dl.uplink);
+        assert_eq!(dl.pdu, vec![0x11, 0x22]);
+
+        let ul = decode_umts(&build_umts(true, &[0x33])).unwrap();
+        assert!(ul.uplink);
+        assert_eq!(ul.pdu, vec![0x33]);
+    }
+
+    #[test]
+    fn umts_rejects_length_running_past_available_data() {
+        let mut body = build_umts(false, &[0xAA]);
+        // overwrite the 4-byte length field to claim more than is present
+        body[1..5].copy_from_slice(&100u32.to_le_bytes());
+        assert!(matches!(
+            decode_umts(&body),
+            Err(UmtsDecodeError::LengthExceedsAvailableData { .. })
+        ));
+    }
+
+    #[test]
+    fn umts_rejects_body_shorter_than_the_fixed_header() {
+        assert_eq!(decode_umts(&[0, 0, 0]), Err(UmtsDecodeError::TooShort));
+    }
+
+    #[test]
+    fn umts_empty_pdu_is_valid_not_an_error() {
+        let decoded = decode_umts(&build_umts(false, &[])).unwrap();
+        assert_eq!(decoded.pdu, Vec::<u8>::new());
     }
 }

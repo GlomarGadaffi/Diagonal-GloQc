@@ -13,6 +13,8 @@ pub mod dispatch;
 pub mod envelope;
 pub mod gsmtap;
 pub mod hdlc;
+pub mod ip_traffic;
+pub mod legacy_signalling;
 pub mod log;
 pub mod mask;
 pub mod nas;

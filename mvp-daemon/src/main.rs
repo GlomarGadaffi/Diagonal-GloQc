@@ -18,7 +18,7 @@ use axum::http::header::{CONTENT_DISPOSITION, CONTENT_TYPE};
 use axum::response::{Html, IntoResponse};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use diag_core::{archive, envelope, hdlc, log, mask};
+use diag_core::{archive, envelope, hdlc, legacy_signalling, log, mask, nas, rrc};
 use serde::Serialize;
 use tokio::sync::Mutex;
 
@@ -207,16 +207,29 @@ async fn status(State(state): State<Arc<AppState>>) -> Json<Status> {
 
 #[derive(Serialize)]
 struct LogTypeCount {
-    /// Hex string (e.g. "0xb0c0") — plain observability data, no decoder
-    /// claims attached. What this code actually *is* is a separate,
-    /// per-type decode question (spec §7), not answered here.
+    /// Hex string (e.g. "0xb0c0") — plain observability data.
     log_type: String,
     count: u64,
+    /// Whether *a* decoder exists for this log_type in diag-core — not a
+    /// claim about how confident that decoder is. `ip_traffic`'s decoder
+    /// exists and is included here despite being explicitly flagged
+    /// uncertain in its own module docs; this field answers "is there
+    /// code that attempts this," not "should you trust the result."
+    decoder_available: bool,
+}
+
+fn has_decoder(log_type: u16) -> bool {
+    log_type == 0xB0C0 // rrc::decode
+        || log_type == rrc::NR_RRC_OTA
+        || nas::is_nas_log_type(log_type)
+        || log_type == nas::UMTS_NAS_OTA
+        || legacy_signalling::is_legacy_signalling_log_type(log_type)
+        || log_type == 0x11EB // ip_traffic::decode
 }
 
 /// Running distribution of log_types seen since the daemon started,
 /// independent of recording start/stop — real observability without
-/// requiring a decoder for every type seen (most don't have one yet).
+/// requiring a decoder for every type seen (most still don't have one).
 async fn log_types(State(state): State<Arc<AppState>>) -> Json<Vec<LogTypeCount>> {
     let cap = state.capture.lock().await;
     let mut counts: Vec<LogTypeCount> = cap
@@ -225,6 +238,7 @@ async fn log_types(State(state): State<Arc<AppState>>) -> Json<Vec<LogTypeCount>
         .map(|(log_type, count)| LogTypeCount {
             log_type: format!("{log_type:#06x}"),
             count: *count,
+            decoder_available: has_decoder(*log_type),
         })
         .collect();
     counts.sort_by(|a, b| b.count.cmp(&a.count));
@@ -371,7 +385,7 @@ const INDEX_HTML: &str = r#"<!doctype html>
 
 <h2>Log types seen (since daemon start)</h2>
 <table id="log-types-table">
-  <thead><tr><th>log_type</th><th>Count</th></tr></thead>
+  <thead><tr><th>log_type</th><th>Count</th><th>Decoded</th></tr></thead>
   <tbody id="log-types-body"></tbody>
 </table>
 <div class="empty" id="log-types-empty" style="display:none">Nothing seen yet.</div>
@@ -412,7 +426,8 @@ async function refreshLogTypes() {
   empty.style.display = types.length === 0 ? 'block' : 'none';
   for (const t of types) {
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + t.log_type + '</td><td>' + t.count + '</td>';
+    const decoded = t.decoder_available ? '&check;' : '&mdash;';
+    tr.innerHTML = '<td>' + t.log_type + '</td><td>' + t.count + '</td><td>' + decoded + '</td>';
     body.appendChild(tr);
   }
 }
