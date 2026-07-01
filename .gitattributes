@@ -1,8 +1,0 @@
-# Files that are distributed onto the device always have to have
-# Unix-style line endings, even if built on Windows with autocrlf enabled.
-# Using CRLF for the init scripts will make them fail to execute on TP-Link.
-
-dist/config.toml.in eol=lf
-dist/scripts/misc-daemon eol=lf
-dist/scripts/rayhunter_daemon eol=lf
-scripts/*.sh eol=lf

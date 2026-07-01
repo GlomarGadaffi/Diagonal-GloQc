@@ -1,16 +1,12 @@
 [alias]
-# Build the daemon with "firmware" profile and post-quantum TLS backend.
-# Needs an arm-linux-musleabihf cross-compiler in PATH, e.g. a toolchain
-# from https://musl.cc, or run inside messense/rust-musl-cross:armv7-musleabihf
-# (which is what CI does, see .github/workflows/main.yml).
-build-daemon-firmware = "build -p rayhunter-daemon --bin rayhunter-daemon --target armv7-unknown-linux-musleabihf --profile firmware --no-default-features --features pq-tls"
-# Build the daemon with "firmware-devel" profile and "rustcrypto" backend.
-# Works with just the Rust toolchain, and is medium-slow to build. Binaries are slightly larger.
-build-daemon-firmware-devel = "build -p rayhunter-daemon --bin rayhunter-daemon --target armv7-unknown-linux-musleabihf --profile firmware-devel"
-# Build rootshell for firmware
-build-rootshell-firmware = "build -p rootshell --bin rootshell --target armv7-unknown-linux-musleabihf --profile firmware"
-# Build rootshell for development
-build-rootshell-firmware-devel = "build -p rootshell --bin rootshell --target armv7-unknown-linux-musleabihf --profile firmware-devel"
+# Build mvp-daemon for the real firmware target. Needs an
+# arm-linux-musleabihf cross-compiler in PATH, e.g. a toolchain from
+# https://musl.cc, or the armv7-unknown-linux-musleabihf rustup target
+# with rust-lld (see the [target.armv7-unknown-linux-musleabihf] section
+# below — no external C cross-compiler needed for this target).
+build-mvp-daemon-firmware = "build -p mvp-daemon --bin mvp-daemon --target armv7-unknown-linux-musleabihf --profile firmware"
+# Same, but the faster-building/less size-optimized profile for iteration.
+build-mvp-daemon-firmware-devel = "build -p mvp-daemon --bin mvp-daemon --target armv7-unknown-linux-musleabihf --profile firmware-devel"
 
 [target.aarch64-apple-darwin]
 linker = "rust-lld"

@@ -1,10 +1,6 @@
 [workspace]
 
 members = [
-    "lib",
-    "daemon",
-    "rootshell",
-    "telcom-parser",
     "diag-core",
     "mvp-daemon",
 ]
