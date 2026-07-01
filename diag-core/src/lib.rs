@@ -22,3 +22,4 @@ pub mod nas;
 pub mod nas_ie;
 pub mod pcap;
 pub mod rrc;
+pub mod rrc_content;

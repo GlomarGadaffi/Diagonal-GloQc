@@ -125,7 +125,9 @@ dependencies = [
 name = "diag-core"
 version = "0.1.0"
 dependencies = [
+ "asn1-codecs",
  "flate2",
+ "lte-rrc-asn1",
 ]
 
 [[package]]

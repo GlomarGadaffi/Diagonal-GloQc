@@ -10,3 +10,8 @@ description = "Independent reimplementation of the Qualcomm DIAG capture protoco
 # §8) — a standard crate here doesn't touch the clean-room boundary the
 # way hand-rolling the protocol layers does.
 flate2 = "1"
+# Real RRC content decode (spec §7's RRC-content heuristics) - generated
+# fresh from public 3GPP spec text via the independent hampi compiler,
+# see asn1-specs/README.md for provenance.
+asn1-codecs = "0.7.2"
+lte-rrc-asn1 = { path = "../asn1-specs" }
