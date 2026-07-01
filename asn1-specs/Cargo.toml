@@ -1,0 +1,16 @@
+[package]
+name = "lte-rrc-asn1"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Generated LTE RRC UPER codec, compiled independently from public 3GPP TS 36.331 ASN.1 spec text via the independent hampi/asn1-compiler tool"
+
+[lib]
+name = "lte_rrc_asn1"
+path = "src/lib.rs"
+
+[dependencies]
+asn1-codecs = "0.7.2"
+asn1_codecs_derive = "0.7.2"
+bitvec = "1.0"
+log = "0.4"

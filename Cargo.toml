@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "asn1-specs",
     "diag-core",
     "mvp-daemon",
     "rootshell",
