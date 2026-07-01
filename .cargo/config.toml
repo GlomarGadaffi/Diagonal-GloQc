@@ -7,6 +7,8 @@
 build-mvp-daemon-firmware = "build -p mvp-daemon --bin mvp-daemon --target armv7-unknown-linux-musleabihf --profile firmware"
 # Same, but the faster-building/less size-optimized profile for iteration.
 build-mvp-daemon-firmware-devel = "build -p mvp-daemon --bin mvp-daemon --target armv7-unknown-linux-musleabihf --profile firmware-devel"
+# rootshell, same target.
+build-rootshell-firmware = "build -p rootshell --bin rootshell --target armv7-unknown-linux-musleabihf --profile firmware"
 
 [target.aarch64-apple-darwin]
 linker = "rust-lld"

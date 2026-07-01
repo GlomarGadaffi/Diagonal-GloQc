@@ -3,5 +3,6 @@
 members = [
     "diag-core",
     "mvp-daemon",
+    "rootshell",
 ]
 resolver = "2"

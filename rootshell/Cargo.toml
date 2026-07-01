@@ -1,0 +1,13 @@
+[package]
+name = "rootshell"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "Minimal SUID-root shell-exec helper for on-device maintenance"
+
+[[bin]]
+name = "rootshell"
+path = "src/main.rs"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
